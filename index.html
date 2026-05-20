@@ -1,150 +1,130 @@
 
 <h2 class="sr-only">랜덤 주사위 굴리기</h2>
 <style>
-.dice-wrap{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;gap:2rem}
-.dice-row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
-.dice{width:100px;height:100px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .12s;user-select:none;position:relative}
-.dice:active{transform:scale(.93)}
-.dice.rolling{animation:roll .45s ease}
-@keyframes roll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-15deg) scale(.9)}50%{transform:rotate(12deg) scale(.95)}75%{transform:rotate(-8deg) scale(.97)}100%{transform:rotate(0) scale(1)}}
-.dots{display:grid;width:72px;height:72px;padding:8px;gap:4px}
-.dot{width:100%;aspect-ratio:1;border-radius:50%;background:var(--color-text-primary);transition:opacity .15s}
-.dot.hidden{opacity:0}
-.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
-.count-label{font-size:14px;color:var(--color-text-secondary)}
-.count-btns{display:flex;gap:6px}
-.count-btn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:6px 14px;font-size:14px;cursor:pointer;color:var(--color-text-primary);transition:background .1s}
-.count-btn:hover{background:var(--color-background-secondary)}
-.count-btn.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
-.roll-btn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:50px;padding:10px 32px;font-size:16px;font-weight:500;cursor:pointer;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;transition:background .1s,transform .1s}
-.roll-btn:hover{background:var(--color-background-secondary)}
-.roll-btn:active{transform:scale(.97)}
+.wrap{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;gap:1.5rem}
+.controls{display:flex;gap:10px;align-items:center}
+.clbl{font-size:14px;color:var(--color-text-secondary)}
+.cbtn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:6px 16px;font-size:14px;cursor:pointer;color:var(--color-text-primary)}
+.cbtn:hover{background:var(--color-background-secondary)}
+.cbtn.on{background:var(--color-text-primary);color:var(--color-background-primary)}
+.dice-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;min-height:120px;align-items:center}
+.dice{width:110px;height:110px;border-radius:16px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;position:relative;transition:transform .1s}
+.dice:active{transform:scale(.92)}
+.dice.spin{animation:sp .4s ease}
+@keyframes sp{0%{transform:rotate(0) scale(1)}30%{transform:rotate(-18deg) scale(.88)}65%{transform:rotate(10deg) scale(.95)}100%{transform:rotate(0) scale(1)}}
+.dot{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--color-text-primary)}
 .total-row{display:flex;align-items:baseline;gap:10px}
-.total-label{font-size:14px;color:var(--color-text-secondary)}
-.total-val{font-size:32px;font-weight:500;color:var(--color-text-primary);min-width:48px;text-align:center;transition:opacity .2s}
-.total-val.flash{animation:flash .3s ease}
-@keyframes flash{0%{opacity:.2}100%{opacity:1}}
-.history{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:420px}
-.hist-pill{background:var(--color-background-secondary);border-radius:50px;padding:3px 12px;font-size:12px;color:var(--color-text-secondary)}
+.tlbl{font-size:14px;color:var(--color-text-secondary)}
+.tval{font-size:36px;font-weight:500;color:var(--color-text-primary);min-width:50px;text-align:center}
+.tval.pop{animation:pop .25s ease}
+@keyframes pop{0%{transform:scale(.7);opacity:.3}100%{transform:scale(1);opacity:1}}
+.rbtn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:50px;padding:11px 36px;font-size:16px;font-weight:500;cursor:pointer;color:var(--color-text-primary);display:flex;align-items:center;gap:8px}
+.rbtn:hover{background:var(--color-background-secondary)}
+.rbtn:active{transform:scale(.97)}
+.hist{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:400px}
+.hp{background:var(--color-background-secondary);border-radius:50px;padding:3px 13px;font-size:13px;color:var(--color-text-secondary)}
+.hp.new{color:var(--color-text-primary);font-weight:500}
 </style>
 
-<div class="dice-wrap">
+<div class="wrap">
   <div class="controls">
-    <span class="count-label">주사위 수</span>
-    <div class="count-btns" id="countBtns">
-      <button class="count-btn active" onclick="setCount(1)">1개</button>
-      <button class="count-btn" onclick="setCount(2)">2개</button>
-      <button class="count-btn" onclick="setCount(3)">3개</button>
-    </div>
+    <span class="clbl">주사위 수</span>
+    <button class="cbtn on" onclick="setN(1,this)">1개</button>
+    <button class="cbtn" onclick="setN(2,this)">2개</button>
+    <button class="cbtn" onclick="setN(3,this)">3개</button>
   </div>
 
   <div class="dice-row" id="diceRow"></div>
 
   <div class="total-row">
-    <span class="total-label">합계</span>
-    <span class="total-val" id="totalVal">-</span>
+    <span class="tlbl">합계</span>
+    <span class="tval" id="tval">-</span>
   </div>
 
-  <button class="roll-btn" onclick="rollAll()">
+  <button class="rbtn" onclick="rollAll()">
     <i class="ti ti-refresh" aria-hidden="true"></i> 굴리기
   </button>
 
-  <div class="history" id="history"></div>
+  <div class="hist" id="hist"></div>
 </div>
 
 <script>
-const DOT_LAYOUTS = {
-  1:[[1,1]],
-  2:[[0,0],[2,2]],
-  3:[[0,0],[1,1],[2,2]],
-  4:[[0,0],[0,2],[2,0],[2,2]],
-  5:[[0,0],[0,2],[1,1],[2,0],[2,2]],
-  6:[[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]]
+const POS = {
+  1:[[50,50]],
+  2:[[25,25],[75,75]],
+  3:[[25,25],[50,50],[75,75]],
+  4:[[25,25],[75,25],[25,75],[75,75]],
+  5:[[25,25],[75,25],[50,50],[25,75],[75,75]],
+  6:[[25,25],[75,25],[25,50],[75,50],[25,75],[75,75]]
 };
 
-let diceCount = 1;
-let values = [1];
-let histData = [];
+let N=1, vals=[1], hist=[];
 
-function setCount(n) {
-  diceCount = n;
-  values = Array(n).fill(1);
-  document.querySelectorAll('.count-btn').forEach((b,i) => b.classList.toggle('active', i+1 === n));
-  renderDice();
-  document.getElementById('totalVal').textContent = '-';
+function setN(n,btn){
+  N=n; vals=Array(n).fill(1);
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  build(); setTotal('-');
 }
 
-function renderDice() {
-  const row = document.getElementById('diceRow');
-  row.innerHTML = '';
-  values.forEach((v, i) => {
-    const d = document.createElement('div');
-    d.className = 'dice';
-    d.id = 'dice' + i;
-    d.onclick = () => rollOne(i);
-    d.title = '클릭하면 이 주사위만 굴려요';
-    d.appendChild(makeDotGrid(v));
+function build(){
+  const row=document.getElementById('diceRow');
+  row.innerHTML='';
+  vals.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dice'; d.id='d'+i;
+    d.title='클릭하면 이 주사위만 굴려요';
+    d.onclick=()=>rollOne(i);
+    drawDice(d, vals[i]);
     row.appendChild(d);
   });
 }
 
-function makeDotGrid(val) {
-  const g = document.createElement('div');
-  g.className = 'dots';
-  g.style.gridTemplateColumns = 'repeat(3,1fr)';
-  g.style.gridTemplateRows = 'repeat(3,1fr)';
-  const layout = DOT_LAYOUTS[val];
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
-      const dot = document.createElement('div');
-      const active = layout.some(([dr,dc]) => dr===r && dc===c);
-      dot.className = 'dot' + (active ? '' : ' hidden');
-      g.appendChild(dot);
-    }
-  }
-  return g;
+function drawDice(el, v){
+  el.innerHTML='';
+  (POS[v]||[]).forEach(([x,y])=>{
+    const dot=document.createElement('div');
+    dot.className='dot';
+    dot.style.left=(x-9)+'%';
+    dot.style.top=(y-9)+'%';
+    el.appendChild(dot);
+  });
 }
 
-function rollOne(idx) {
-  const el = document.getElementById('dice' + idx);
-  el.classList.remove('rolling');
-  void el.offsetWidth;
-  el.classList.add('rolling');
-  let t = 0;
-  const interval = setInterval(() => {
-    values[idx] = Math.floor(Math.random() * 6) + 1;
-    el.innerHTML = '';
-    el.appendChild(makeDotGrid(values[idx]));
-    t++;
-    if (t > 8) {
-      clearInterval(interval);
-      el.classList.remove('rolling');
-      updateTotal();
-    }
-  }, 50);
+function rollOne(i){
+  const el=document.getElementById('d'+i);
+  el.classList.remove('spin'); void el.offsetWidth; el.classList.add('spin');
+  let t=0;
+  const iv=setInterval(()=>{
+    vals[i]=Math.ceil(Math.random()*6);
+    drawDice(el, vals[i]);
+    if(++t>=10){ clearInterval(iv); el.classList.remove('spin'); refreshTotal(); }
+  },45);
 }
 
-function rollAll() {
-  for (let i = 0; i < diceCount; i++) rollOne(i);
-  setTimeout(() => addHistory(), 500);
+function rollAll(){
+  for(let i=0;i<N;i++) rollOne(i);
+  setTimeout(()=>{
+    const s=vals.reduce((a,b)=>a+b,0);
+    hist.unshift(s); if(hist.length>8) hist.pop();
+    renderHist();
+  },500);
 }
 
-function updateTotal() {
-  const sum = values.reduce((a,b) => a+b, 0);
-  const tv = document.getElementById('totalVal');
-  tv.textContent = sum;
-  tv.classList.remove('flash');
-  void tv.offsetWidth;
-  tv.classList.add('flash');
+function refreshTotal(){
+  setTotal(vals.reduce((a,b)=>a+b,0));
 }
 
-function addHistory() {
-  const sum = values.reduce((a,b) => a+b, 0);
-  histData.unshift(sum);
-  if (histData.length > 8) histData.pop();
-  const h = document.getElementById('history');
-  h.innerHTML = histData.map((v,i) => `<span class="hist-pill">${i===0?'<b>'+v+'</b>':v}</span>`).join('');
+function setTotal(v){
+  const el=document.getElementById('tval');
+  el.textContent=v;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
 }
 
-renderDice();
+function renderHist(){
+  document.getElementById('hist').innerHTML=
+    hist.map((v,i)=>`<span class="hp${i===0?' new':''}">${v}</span>`).join('');
+}
+
+build();
 </script>
