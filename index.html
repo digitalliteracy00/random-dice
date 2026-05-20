@@ -1,0 +1,150 @@
+
+<h2 class="sr-only">랜덤 주사위 굴리기</h2>
+<style>
+.dice-wrap{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;gap:2rem}
+.dice-row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.dice{width:100px;height:100px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .12s;user-select:none;position:relative}
+.dice:active{transform:scale(.93)}
+.dice.rolling{animation:roll .45s ease}
+@keyframes roll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-15deg) scale(.9)}50%{transform:rotate(12deg) scale(.95)}75%{transform:rotate(-8deg) scale(.97)}100%{transform:rotate(0) scale(1)}}
+.dots{display:grid;width:72px;height:72px;padding:8px;gap:4px}
+.dot{width:100%;aspect-ratio:1;border-radius:50%;background:var(--color-text-primary);transition:opacity .15s}
+.dot.hidden{opacity:0}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.count-label{font-size:14px;color:var(--color-text-secondary)}
+.count-btns{display:flex;gap:6px}
+.count-btn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:6px 14px;font-size:14px;cursor:pointer;color:var(--color-text-primary);transition:background .1s}
+.count-btn:hover{background:var(--color-background-secondary)}
+.count-btn.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.roll-btn{border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);border-radius:50px;padding:10px 32px;font-size:16px;font-weight:500;cursor:pointer;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;transition:background .1s,transform .1s}
+.roll-btn:hover{background:var(--color-background-secondary)}
+.roll-btn:active{transform:scale(.97)}
+.total-row{display:flex;align-items:baseline;gap:10px}
+.total-label{font-size:14px;color:var(--color-text-secondary)}
+.total-val{font-size:32px;font-weight:500;color:var(--color-text-primary);min-width:48px;text-align:center;transition:opacity .2s}
+.total-val.flash{animation:flash .3s ease}
+@keyframes flash{0%{opacity:.2}100%{opacity:1}}
+.history{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:420px}
+.hist-pill{background:var(--color-background-secondary);border-radius:50px;padding:3px 12px;font-size:12px;color:var(--color-text-secondary)}
+</style>
+
+<div class="dice-wrap">
+  <div class="controls">
+    <span class="count-label">주사위 수</span>
+    <div class="count-btns" id="countBtns">
+      <button class="count-btn active" onclick="setCount(1)">1개</button>
+      <button class="count-btn" onclick="setCount(2)">2개</button>
+      <button class="count-btn" onclick="setCount(3)">3개</button>
+    </div>
+  </div>
+
+  <div class="dice-row" id="diceRow"></div>
+
+  <div class="total-row">
+    <span class="total-label">합계</span>
+    <span class="total-val" id="totalVal">-</span>
+  </div>
+
+  <button class="roll-btn" onclick="rollAll()">
+    <i class="ti ti-refresh" aria-hidden="true"></i> 굴리기
+  </button>
+
+  <div class="history" id="history"></div>
+</div>
+
+<script>
+const DOT_LAYOUTS = {
+  1:[[1,1]],
+  2:[[0,0],[2,2]],
+  3:[[0,0],[1,1],[2,2]],
+  4:[[0,0],[0,2],[2,0],[2,2]],
+  5:[[0,0],[0,2],[1,1],[2,0],[2,2]],
+  6:[[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]]
+};
+
+let diceCount = 1;
+let values = [1];
+let histData = [];
+
+function setCount(n) {
+  diceCount = n;
+  values = Array(n).fill(1);
+  document.querySelectorAll('.count-btn').forEach((b,i) => b.classList.toggle('active', i+1 === n));
+  renderDice();
+  document.getElementById('totalVal').textContent = '-';
+}
+
+function renderDice() {
+  const row = document.getElementById('diceRow');
+  row.innerHTML = '';
+  values.forEach((v, i) => {
+    const d = document.createElement('div');
+    d.className = 'dice';
+    d.id = 'dice' + i;
+    d.onclick = () => rollOne(i);
+    d.title = '클릭하면 이 주사위만 굴려요';
+    d.appendChild(makeDotGrid(v));
+    row.appendChild(d);
+  });
+}
+
+function makeDotGrid(val) {
+  const g = document.createElement('div');
+  g.className = 'dots';
+  g.style.gridTemplateColumns = 'repeat(3,1fr)';
+  g.style.gridTemplateRows = 'repeat(3,1fr)';
+  const layout = DOT_LAYOUTS[val];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const dot = document.createElement('div');
+      const active = layout.some(([dr,dc]) => dr===r && dc===c);
+      dot.className = 'dot' + (active ? '' : ' hidden');
+      g.appendChild(dot);
+    }
+  }
+  return g;
+}
+
+function rollOne(idx) {
+  const el = document.getElementById('dice' + idx);
+  el.classList.remove('rolling');
+  void el.offsetWidth;
+  el.classList.add('rolling');
+  let t = 0;
+  const interval = setInterval(() => {
+    values[idx] = Math.floor(Math.random() * 6) + 1;
+    el.innerHTML = '';
+    el.appendChild(makeDotGrid(values[idx]));
+    t++;
+    if (t > 8) {
+      clearInterval(interval);
+      el.classList.remove('rolling');
+      updateTotal();
+    }
+  }, 50);
+}
+
+function rollAll() {
+  for (let i = 0; i < diceCount; i++) rollOne(i);
+  setTimeout(() => addHistory(), 500);
+}
+
+function updateTotal() {
+  const sum = values.reduce((a,b) => a+b, 0);
+  const tv = document.getElementById('totalVal');
+  tv.textContent = sum;
+  tv.classList.remove('flash');
+  void tv.offsetWidth;
+  tv.classList.add('flash');
+}
+
+function addHistory() {
+  const sum = values.reduce((a,b) => a+b, 0);
+  histData.unshift(sum);
+  if (histData.length > 8) histData.pop();
+  const h = document.getElementById('history');
+  h.innerHTML = histData.map((v,i) => `<span class="hist-pill">${i===0?'<b>'+v+'</b>':v}</span>`).join('');
+}
+
+renderDice();
+</script>
